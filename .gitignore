@@ -1,0 +1,22 @@
+# 1. Operating System junk files (created automatically by Mac/Windows)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 2. Database & Editor temporary files (SSMS, VS Code, Visual Studio)
+.vs/
+*.user
+*.suo
+*.tmp
+*.log
+
+# 3. Database files and backups (prevents massive DB files from crashing Git)
+*.mdf
+*.ldf
+*.bak
+*.zip
+
+# 4. Passwords and secret configuration files
+*.env
+config.json
+credentials.txt
