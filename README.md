@@ -1,212 +1,257 @@
-# MediCore — End-to-End Healthcare Data Warehouse
+# MediCore | End-to-End Healthcare Data Engineering & Business Intelligence
 
-**An end-to-end SQL Server data engineering project transforming raw healthcare operational data into a structured, analytics-ready data warehouse.**
+**From raw healthcare data to a dimensional data warehouse and interactive Power BI dashboards.**
 
 <p align="center">
-  <img src="https://img.shields.io/badge/SQL-Microsoft%20SQL%20Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="Microsoft SQL Server" />
-  <img src="https://img.shields.io/badge/ETL-Data%20Engineering-2563EB?style=for-the-badge" alt="ETL Data Engineering" />
-  <img src="https://img.shields.io/badge/Modeling-Star%20Schema-7C3AED?style=for-the-badge" alt="Star Schema" />
-  <img src="https://img.shields.io/badge/Architecture-Multi--Layer-059669?style=for-the-badge" alt="Multi-Layer Architecture" />
+  <img src="https://img.shields.io/badge/Microsoft%20SQL%20Server-T--SQL-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="Microsoft SQL Server" />
+  <img src="https://img.shields.io/badge/Data%20Engineering-ETL-2563EB?style=for-the-badge" alt="Data Engineering" />
+  <img src="https://img.shields.io/badge/Data%20Modeling-Star%20Schema-7C3AED?style=for-the-badge" alt="Star Schema" />
+  <img src="https://img.shields.io/badge/Business%20Intelligence-Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black" alt="Power BI" />
 </p>
 
-## 1. Project Overview
+## 1. Executive Summary
 
-MediCore is a healthcare data warehousing project designed to demonstrate how raw, operational hospital data can be transformed into a structured and analytics-ready format using Microsoft SQL Server and T-SQL.
+MediCore is an end-to-end healthcare data analytics and data engineering project built to demonstrate how raw operational healthcare data can be transformed into a structured data warehouse and converted into actionable business intelligence.
 
-Healthcare systems generate interconnected data across patients, doctors, departments, appointments, prescriptions, laboratory results, billing, payments, and insurance policies. Analyzing these entities directly from a denormalized source can introduce redundancy, inconsistent records, and complex analytical queries.
+Healthcare organizations generate interconnected data across patients, appointments, doctors, departments, laboratory investigations, prescriptions, insurance policies, billing, and payments. Analyzing these records independently can make it difficult to establish consistent metrics, maintain data quality, and evaluate operational and financial performance.
 
-This project addresses those challenges through a layered data architecture that separates raw ingestion, operational data integration, and analytical reporting structures.
+MediCore addresses this challenge through a layered SQL Server data architecture, followed by an analytical warehouse and interactive Power BI dashboards.
 
-The pipeline incorporates data cleansing, type conversion, deduplication, relational normalization, referential integrity, ETL auditing, dimensional modeling, and historical patient tracking through Slowly Changing Dimensions.
+The project combines data ingestion, relational normalization, data quality handling, ETL auditing, dimensional modeling, historical patient tracking, and business-facing visual analytics.
 
-**The objective:** demonstrate the design and implementation of a complete data warehouse workflow, from raw data ingestion to fact and dimension tables that can support downstream BI and business analysis.
+**The objective is to bridge the gap between data engineering and business decision-making.**
 
-## 2. Architecture
+## 2. Solution Architecture
 
-The solution follows a layered data warehousing architecture.
+The project follows a multi-layer data processing workflow.
 
 ```mermaid
 flowchart TD
-    A["Raw Hospital / ERP CSV"] --> B["STG — Staging Layer"]
-    B --> C["ODS — Operational Data Store"]
-    C --> D["DW — Dimensional Data Warehouse"]
-    D --> E["BI & Analytical Reporting"]
+    A["Raw Healthcare CSV Data"]
+    B["STG — Staging Layer"]
+    C["ODS — Operational Data Store"]
+    D["DW — Dimensional Data Warehouse"]
+    E["Power BI Dashboards"]
+    F["Business & Operational Insights"]
+    G["Audit and Rejected-Record Tracking"]
 
-    B1["Raw ingestion and type-safe landing"] -.-> B
-    C1["Cleansing, deduplication, normalization"] -.-> C
-    D1["Fact tables, dimensions, surrogate keys"] -.-> D
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
 
-    F["Audit & Load Control"] -.-> B
-    F -.-> C
-    F -.-> D
+    B -.-> G
+    C -.-> G
+    D -.-> G
 
     style A fill:#E8F1FF,stroke:#4472C4,color:#172B4D
     style B fill:#E8F1FF,stroke:#4472C4,color:#172B4D
     style C fill:#E8F5E9,stroke:#388E3C,color:#1B4332
     style D fill:#F3E8FF,stroke:#8E44AD,color:#4A235A
     style E fill:#FFF3CD,stroke:#D4AC0D,color:#664D03
-    style F fill:#FCE4EC,stroke:#C2185B,color:#880E4F
+    style F fill:#D1FAE5,stroke:#059669,color:#064E3B
+    style G fill:#FCE4EC,stroke:#C2185B,color:#880E4F
 ```
 
 ### Layer 1 — Staging (`stg`)
 
-The staging layer acts as the raw landing zone for incoming hospital records.
+The staging layer serves as the initial landing zone for raw healthcare records.
 
 Key responsibilities:
 
-- Define a landing table for source data.
-- Ingest CSV data using `BULK INSERT`.
-- Preserve source values in flexible text columns before transformation.
-- Support downstream cleansing and type conversion.
+- Define a staging table for source data.
+- Ingest CSV data using SQL Server `BULK INSERT`.
+- Preserve source values before downstream transformations.
+- Provide a consistent input structure for subsequent ETL processes.
 
 ### Layer 2 — Operational Data Store (`ods`)
 
-The ODS layer transforms the raw source into structured relational entities.
+The ODS transforms raw records into structured relational entities.
 
 Key responsibilities:
 
-- Normalize patient, doctor, department, branch, and insurer data.
-- Separate patient allergies and insurance policies into dedicated entities.
+- Normalize patient, doctor, department, branch, and insurer information.
+- Separate multi-valued patient allergies and insurance policies into dedicated tables.
 - Convert source values into appropriate SQL Server data types.
-- Standardize text fields and normalize selected categorical values.
-- Deduplicate patient and appointment records using window functions.
-- Enforce primary keys, foreign keys, unique constraints, and check constraints.
-- Create indexes to support common appointment lookups.
-- Track load execution and rejected records.
+- Standardize text and categorical values.
+- Handle duplicate patient and appointment records using `ROW_NUMBER()`.
+- Apply primary keys, foreign keys, unique constraints, and check constraints.
+- Log rejected records and track ETL load execution.
 
-### Layer 3 — Dimensional Data Warehouse (`dw`)
+### Layer 3 — Data Warehouse (`dw`)
 
-The warehouse layer reorganizes operational data into analytical dimensions and facts.
+The warehouse organizes operational records into analytical dimensions and fact tables.
 
 Key responsibilities:
 
-- Build a star-schema-oriented analytical model.
-- Use surrogate keys to connect fact records to dimensions.
-- Generate a date dimension with calendar and fiscal attributes.
-- Implement Slowly Changing Dimension Type 1 for selected dimensions.
-- Implement Slowly Changing Dimension Type 2 for patient history.
+- Build a star-schema-oriented dimensional model.
+- Generate surrogate keys for dimensional relationships.
+- Create a date dimension with calendar and fiscal attributes.
+- Implement Slowly Changing Dimension (SCD) Type 1 and Type 2 logic.
 - Load appointment, billing, laboratory, and prescription facts.
-- Introduce unknown dimension members to handle unresolved references.
+- Use unknown dimension members to handle unresolved dimension references.
 
-### Audit Layer (`audit`)
+### Layer 4 — Business Intelligence
 
-The audit layer provides ETL execution metadata.
+The Power BI report provides a business-facing analytical layer on top of the data warehouse.
 
-The loading scripts use a load-control table to identify pipeline stages and associate processing with a load ID. The staging-to-ODS workflow also includes a rejected-record logging mechanism.
+It includes dedicated pages for executive revenue analysis, revenue details, and clinical operations. These views help explore financial performance, billing quality, appointment activity, laboratory results, and prescription patterns.
 
-## 3. Data Model
+## 3. Power BI Dashboard Suite
 
-The project covers multiple healthcare entities and analytical processes.
+The Power BI report, `medicore-dashboard.pbix`, contains three analytical report pages.
 
-### Operational entities
+### 3.1 Executive Revenue
 
-| Entity | Purpose |
-|---|---|
-| Patient | Patient demographic and contact information |
-| Doctor | Doctor attributes and standard consultation fee |
-| Department | Hospital department reference data |
-| Branch | Hospital branch information |
-| PatientAllergy | One record per patient-allergy combination |
-| PatientPolicy | Patient insurance policies and coverage limits |
-| Insurer | Insurance provider reference data |
-| Appointment | Appointment details, status, and clinical information |
-| LabResult | Laboratory test results and charges |
-| Prescription | Prescribed medicines, dosage, and duration |
-| Bill | Billing and payment information |
+The executive revenue page focuses on financial performance and billing quality.
 
-### Analytical fact tables
+Key analytical areas include:
 
-| Fact table | Analytical focus |
-|---|---|
-| `dw.FactAppointment` | Appointment activity and related measures |
-| `dw.FactBilling` | Billing amounts, discounts, taxes, and payment-related analysis |
-| `dw.FactLabResult` | Laboratory activity, results, and charges |
-| `dw.FactPrescription` | Prescription activity, medicines, and associated charges |
+- Revenue trends and fiscal-year comparisons.
+- Verified versus unverified revenue.
+- Billing defect percentage.
+- Absolute financial exposure associated with billing defects.
+- Department-level revenue comparisons.
+- Revenue analysis across reporting periods.
 
-### Key dimensions
+**Business questions addressed:**
 
-The warehouse loading script uses dimensions including:
+- How does reported revenue change over time?
+- How much revenue is classified as verified versus unverified?
+- Which departments contribute most to reported revenue?
+- What is the financial exposure associated with identified billing defects?
 
-- `dw.DimDate`
-- `dw.DimPatient`
-- `dw.DimDoctor`
-- `dw.DimDepartment`
-- `dw.DimBranch`
-- `dw.DimInsurer`
-- `dw.DimLabTest`
-- `dw.DimMedicine`
-- `dw.DimPaymentMode`
+### 3.2 Revenue Details
 
-The date dimension includes attributes such as calendar year, month, quarter, fiscal year, fiscal quarter, and weekend indicators.
+The revenue details page provides a more granular view of billing performance.
 
-## 4. Engineering Concepts Implemented
+Key analytical areas include:
+
+- Reported revenue.
+- GST collected.
+- Average bill value.
+- Bill counts.
+- Billing validity.
+- Department-level revenue analysis.
+
+**Business questions addressed:**
+
+- How does average bill value vary across the business?
+- How much GST is recorded in the billing data?
+- How do billing records and financial totals vary by department?
+- What proportion of bills meets the defined validity criteria?
+
+### 3.3 Clinical Operations
+
+The clinical operations page focuses on healthcare delivery and clinical activity.
+
+Key analytical areas include:
+
+- Appointment volumes.
+- Appointment completion rate.
+- No-show rate.
+- Abnormal laboratory results.
+- Doctor-level activity.
+- Medicine analysis.
+
+**Business questions addressed:**
+
+- How effectively are scheduled appointments being completed?
+- What proportion of appointments are recorded as no-shows?
+- How does activity vary across doctors?
+- What patterns can be explored in laboratory results and prescription data?
+
+*The descriptions above summarize the report's analytical areas. Actual KPI values, business-rule definitions, and conclusions should be interpreted from the underlying report and data.*
+
+## 4. SQL Data Engineering Implementation
+
+The project demonstrates a range of SQL Server techniques used to build and maintain an analytical data platform.
 
 ### Data ingestion and transformation
 
 - `BULK INSERT` for CSV ingestion.
-- `TRY_CAST` and `TRY_CONVERT` for safer type conversion.
+- `TRY_CAST` and `TRY_CONVERT` for type-safe transformation.
 - `LTRIM`, `RTRIM`, `NULLIF`, and `CASE` for data standardization.
-- `STRING_SPLIT` with `CROSS APPLY` to transform multi-valued allergy fields.
-- Common Table Expressions (CTEs) to structure complex transformations.
+- `STRING_SPLIT` with `CROSS APPLY` for handling multi-valued allergy attributes.
+- Common Table Expressions (CTEs) for structured transformations.
+- `ROW_NUMBER()` for deduplication and record selection.
 
 ### Data quality and integrity
 
-- Primary and foreign keys.
+- Primary and foreign key constraints.
 - Unique and check constraints.
-- Duplicate handling through `ROW_NUMBER()`.
-- Null and invalid-value handling.
+- Duplicate detection and handling.
+- Invalid-value and null handling.
 - Rejected-record logging.
-- Referential integrity between related healthcare entities.
+- Referential integrity across related healthcare entities.
 
-### Relational database design
+### ETL auditing
 
-The ODS design demonstrates normalization principles:
+The pipeline uses an audit layer to track data loading activity.
 
-- **First Normal Form (1NF):** patient allergies are separated from a multi-valued source field.
-- **Second Normal Form (2NF):** doctor-level standard consultation fees are separated from individual appointment fees.
-- **Third Normal Form (3NF):** insurer details and patient-policy attributes are stored separately.
+Implemented patterns include:
 
-These design choices reduce redundancy and establish clearer relationships between entities.
+- Load-control records with load identifiers.
+- Source-system and load-name tracking.
+- Inserted and rejected row counts.
+- Rejected-record logging for staging-to-ODS processing.
+- Transactional error handling in the staging-to-ODS workflow.
 
-### Dimensional modeling
+### Database design
 
-- Fact and dimension table design.
-- Surrogate keys.
-- Date dimension generation.
-- Unknown dimension members using a reserved key.
-- Star-schema-oriented analytical structures.
-- SCD Type 1 and Type 2 dimension loading strategies.
+The operational layer applies normalization principles to reduce redundancy and represent healthcare relationships more clearly.
 
-### ETL control
+Examples include separating patient allergies from patient records, separating insurer details from patient insurance policies, and maintaining doctor information independently from individual appointments.
 
-- Load IDs to associate data with pipeline executions.
-- Load-control records for ETL stages.
-- Transactional loading in the staging-to-ODS workflow.
-- Error and rejected-record handling mechanisms.
+## 5. Dimensional Modeling & Data Warehouse Design
 
-## 5. Slowly Changing Dimensions
+The warehouse uses fact and dimension tables to make analytical queries more straightforward.
 
-An important feature of the warehouse is the use of two dimension-history strategies.
+### Fact tables
+
+| Fact table | Analytical purpose |
+|---|---|
+| `dw.FactAppointment` | Appointment activity and related measures |
+| `dw.FactBilling` | Billing amounts, discounts, taxes, and payment analysis |
+| `dw.FactLabResult` | Laboratory activity, results, and charges |
+| `dw.FactPrescription` | Prescription activity, medicines, and associated charges |
+
+### Dimension tables
+
+| Dimension | Analytical purpose |
+|---|---|
+| `dw.DimDate` | Calendar and fiscal reporting |
+| `dw.DimPatient` | Patient attributes and historical versions |
+| `dw.DimDoctor` | Doctor-level analysis |
+| `dw.DimDepartment` | Department-level analysis |
+| `dw.DimBranch` | Branch-level analysis |
+| `dw.DimInsurer` | Insurance and self-pay analysis |
+| `dw.DimLabTest` | Laboratory test analysis |
+| `dw.DimMedicine` | Medicine and prescription analysis |
+| `dw.DimPaymentMode` | Payment mode and payment status analysis |
+
+### Surrogate keys and unknown members
+
+Warehouse dimensions use surrogate keys to establish analytical relationships independently of source-system identifiers.
+
+The loading script also creates reserved unknown members for selected dimensions. These allow certain fact records to reference an explicit unknown dimension record when the corresponding entity is unavailable.
+
+### Slowly Changing Dimensions
+
+The project implements two dimension-update strategies.
 
 **SCD Type 1 — Overwrite**
 
-Selected dimensions, including doctor and department dimensions, are updated when source attributes change. This maintains the latest attribute values without preserving prior versions.
+Selected dimensions, including doctor and department dimensions, are updated when source attributes change. Previous values are not retained as historical versions.
 
 **SCD Type 2 — Historical tracking**
 
-The patient dimension uses historical versioning logic. When tracked patient attributes change, the warehouse can close the previous version and create a new current version.
+The patient dimension uses historical versioning logic to preserve changes to tracked attributes. Effective-date fields and a current-record indicator distinguish historical versions from the current version.
 
-The patient dimension includes fields such as:
-
-- `PatientSK` — warehouse surrogate key.
-- `EffectiveFrom` / `EffectiveTo` — version validity boundaries.
-- `IsCurrent` — identifies the current version.
-
-This supports analyses that require patient attributes to be interpreted according to their historical versions rather than only their latest values.
+This design supports analysis that needs to distinguish the current patient profile from prior versions.
 
 ## 6. Repository Structure
-
-The repository contains SQL scripts organized around individual warehouse implementation stages.
 
 ```text
 end_to_end_de/
@@ -216,143 +261,171 @@ end_to_end_de/
 ├── 04_load_stg_to_ods.sql
 ├── 05_ods_normalised.sql
 ├── 07_loads_ODS_to_dw_star_schema.sql
-│
+├── medicore-dashboard.pbix
 └── README.md
 ```
 
-| Script | Responsibility |
+| File | Purpose |
 |---|---|
-| `01_CREATE TABLE QUERY.sql` | Defines the raw staging table and related ingestion setup |
-| `02_BULT INSERT.sql` | Defines the staging load view and bulk CSV ingestion |
-| `05_ods_normalised.sql` | Creates normalized ODS entities and integrity constraints |
-| `04_load_stg_to_ods.sql` | Transforms staging data into the ODS and handles load auditing |
+| `01_CREATE TABLE QUERY.sql` | Creates staging-related schemas and the raw landing table; includes bulk-load setup |
+| `02_BULT INSERT.sql` | Defines the CSV ingestion operation |
+| `05_ods_normalised.sql` | Defines normalized operational data entities and constraints |
+| `04_load_stg_to_ods.sql` | Transforms staging data into ODS entities and records load outcomes |
 | `07_loads_ODS_to_dw_star_schema.sql` | Loads warehouse dimensions and analytical fact tables |
+| `medicore-dashboard.pbix` | Power BI report containing the three analytical pages |
+| `README.md` | Project documentation, architecture, and setup guidance |
 
-The filenames above reflect the scripts included in this repository overview. Review the SQL dependencies and any additional scripts in the repository before executing the pipeline.
+**Note:** The SQL filenames are not strictly numbered in execution order. Review the dependencies within each script before running them.
 
 ## 7. Technology Stack
 
-| Technology | Role |
+| Technology | Application |
 |---|---|
 | Microsoft SQL Server | Database engine |
-| T-SQL | Schema design, transformations, and ETL logic |
+| T-SQL | Data transformation, schema design, and ETL |
 | SQL Server Management Studio (SSMS) | SQL development and execution |
-| CSV | Source-data format |
-| Git and GitHub | Version control and project documentation |
-| Star schema | Analytical data modeling approach |
+| CSV | Raw data ingestion |
+| Power BI | Interactive business intelligence and reporting |
+| Git | Version control |
+| GitHub | Source code hosting and project documentation |
 
 ## 8. Setup and Execution
 
 ### Prerequisites
 
 - Microsoft SQL Server.
-- SQL Server Management Studio or another compatible SQL client.
-- A source CSV compatible with the staging table structure.
-- Permission to create schemas and tables, execute bulk loads, and access the required source file.
+- SQL Server Management Studio or a compatible SQL client.
+- Power BI Desktop to open the `.pbix` report.
+- The source CSV file required by the ingestion script.
+- Appropriate database permissions for schema creation, table creation, and bulk loading.
 
-### Step 1 — Prepare the source file
+### Step 1 — Prepare the database
 
-The ingestion script references:
+The SQL scripts reference a database named `MediCoreDW`.
+
+Create the database and ensure the required `stg`, `ods`, `dw`, and `audit` schemas and prerequisite tables are available.
+
+### Step 2 — Configure the source file
+
+The ingestion scripts use a local Windows file path:
 
 ```text
 C:\MediCore\hospital_raw.csv
 ```
 
-Place your source CSV at that location or update the file path in the script to match your environment.
+Update the path to match the location of your CSV file. Ensure that the source column order and formats are consistent with the staging table definition.
 
-Ensure that the CSV column order and data format match the staging ingestion definition.
+SQL Server must be able to access the file using the permissions of the relevant execution context.
 
-### Step 2 — Create the database and prerequisites
+### Step 3 — Create the staging structure and ingest raw data
 
-The scripts reference a database named `MediCoreDW`.
+Execute the staging DDL and ingestion setup. Verify that the CSV loads into the expected staging structure.
 
-Create the database and verify that all required schemas, audit tables, dimension tables, and fact tables are defined before running the dependent loading scripts.
+### Step 4 — Create the ODS tables
 
-Some warehouse and audit table definitions may be maintained in additional SQL scripts. Execute those prerequisite definitions first.
+Execute `05_ods_normalised.sql` to create the normalized ODS entities and their constraints.
 
-### Step 3 — Create the staging structure
-
-Execute the staging table definition and staging ingestion setup after checking the source file path and the dependencies between the scripts.
-
-### Step 4 — Create the ODS structure
-
-Run the ODS DDL script to create the normalized operational entities and their constraints.
-
-Review the `DROP TABLE IF EXISTS` statements before execution: these are destructive rebuild operations and can remove existing tables and their data.
+Review the `DROP TABLE IF EXISTS` statements before running the script. They can delete existing tables and their data.
 
 ### Step 5 — Load staging data into the ODS
 
-Execute the staging-to-ODS loading script after the staging table and ODS entities are ready.
+Execute `04_load_stg_to_ods.sql` after its prerequisite schemas and tables exist.
 
-Inspect the load-control records and rejected-record logs to validate the load.
+Review the load-control records and rejected-record logs to validate processing outcomes.
 
-### Step 6 — Load the dimensional warehouse
+### Step 6 — Load the data warehouse
 
-Execute the warehouse-loading script after the required dimension and fact table definitions are available.
+Execute `07_loads_ODS_to_dw_star_schema.sql` after the required warehouse table definitions are available.
 
-Validate the fact-to-dimension relationships and confirm that the expected rows have been loaded.
+Validate dimension and fact row counts and confirm that the relationships resolve as intended.
 
-> **Important:** The source scripts contain environment-specific assumptions, including a local CSV path and a SQL Server database name. Review and adapt these before running the pipeline. Execute the scripts in dependency order rather than relying solely on their filenames.
+### Step 7 — Open the Power BI report
 
-## 9. Potential Analytical Use Cases
+Open `medicore-dashboard.pbix` in Power BI Desktop.
 
-The warehouse is structured to support questions such as:
+Configure or refresh the data connection if required by your local environment. Confirm that the report is connected to the correct database and that its visuals reflect the expected warehouse data.
 
-**Appointment operations**
-- How does appointment volume vary by date, department, doctor, or branch?
-- What proportion of appointments are completed, cancelled, scheduled, or marked as no-shows?
-- How do appointment trends vary across calendar and fiscal periods?
+> **Important:** Review destructive table operations and the fact-table refresh strategy before rerunning the scripts against existing data. The warehouse-loading script truncates and reloads its fact tables, so repeated execution should be treated as a controlled rebuild rather than an incremental load.
 
-**Billing and payments**
-- How do billing amounts, discounts, and taxes vary over time?
-- Which branches or departments generate the highest billing totals?
-- How do payment modes and payment statuses vary across transactions?
+## 9. Potential Business Applications
 
-**Laboratory and prescriptions**
-- Which laboratory tests occur most frequently?
-- How do laboratory charges vary by test or time period?
-- Which medicines are prescribed most often?
-- How do prescription and laboratory charges contribute to overall activity?
+The warehouse and dashboard structure can support exploration of several healthcare management questions.
 
-**Patient and insurance analysis**
-- How does patient activity change over time?
-- How are appointments distributed across departments and branches?
-- How do insurance providers and policy coverage limits vary across the patient population?
+### Financial performance
 
-These are proposed analytical use cases enabled by the model, not claims of measured findings from a completed analysis.
+- Revenue trends across reporting periods.
+- Department-level revenue contribution.
+- Billing validity and identified financial exposure.
+- GST and average bill value analysis.
+
+### Operational performance
+
+- Appointment completion and no-show rates.
+- Doctor-level activity comparisons.
+- Appointment volume trends.
+- Department and branch activity.
+
+### Clinical activity
+
+- Abnormal laboratory result patterns.
+- Laboratory test activity.
+- Medicine and prescription patterns.
+
+### Data quality and governance
+
+- Invalid and rejected source records.
+- Duplicate records and referential integrity.
+- Historical changes to patient attributes.
+- Reconciliation between source records and warehouse outputs.
+
+These are analytical use cases supported by the project's design; they are not claims of quantified business impact or verified findings.
 
 ## 10. Data Validation Checklist
 
-Before treating the warehouse as reporting-ready, validate the following:
+Before using the dashboards for decision-making, validate:
 
-- [ ] Source row counts reconcile with staging ingestion results.
-- [ ] Invalid or unconvertible source values are identified.
-- [ ] Duplicate patient and appointment handling behaves as intended.
-- [ ] Foreign-key relationships are satisfied.
-- [ ] Rejected records are reviewed and accounted for.
-- [ ] Fact records resolve to the appropriate dimension keys.
-- [ ] SCD Type 2 processing maintains the intended current-record rules.
-- [ ] Repeated pipeline executions do not create unintended duplicates.
-- [ ] Billing totals reconcile with the source data.
-- [ ] Date dimension coverage includes the required reporting periods.
+- [ ] Source row counts against staging ingestion results.
+- [ ] Invalid and unconvertible source values.
+- [ ] Deduplication rules for patient and appointment records.
+- [ ] Rejected-record counts and reasons.
+- [ ] Foreign-key and dimension-key resolution.
+- [ ] Fact-table totals against the corresponding source records.
+- [ ] SCD Type 2 current-record and historical-version behavior.
+- [ ] Revenue, GST, billing-validity, and financial-exposure definitions.
+- [ ] Appointment completion and no-show definitions.
+- [ ] Consistency between dashboard metrics and SQL validation queries.
 
-## 11. Design Considerations and Future Improvements
+## 11. Future Enhancements
 
-Potential extensions include:
+Potential next steps include:
 
-- Add automated reconciliation queries and data-quality reports.
-- Introduce a centralized configuration for source paths and environment-specific settings.
-- Add repeatable pipeline orchestration and scheduling.
-- Expand ETL observability with row counts, execution status, and error details.
-- Add incremental ingestion and change detection for larger source datasets.
-- Create Power BI dashboards for operational and financial reporting.
-- Add automated tests for referential integrity, duplicate detection, and SCD behavior.
-- Document the grain, measures, and dimension relationships for every fact table.
+- Automated source-to-target reconciliation.
+- Additional data-quality checks and exception reporting.
+- Incremental ETL and change-data processing.
+- Centralized configuration for environment-specific settings.
+- Scheduled pipeline orchestration and monitoring.
+- Expanded test coverage for SCD behavior and data integrity.
+- More detailed technical documentation of fact-table grain and measures.
+- Additional Power BI drill-through, tooltips, and analytical views.
 
-These are possible extensions rather than features claimed to be already implemented.
+These are proposed improvements, not features claimed to be implemented.
 
-## 12. Project Scope and Data Privacy
+## 12. Data Privacy & Project Scope
 
-This repository demonstrates a technical data engineering workflow using healthcare-domain data structures. It is intended for learning, demonstration, and portfolio purposes.
+MediCore is a portfolio project demonstrating SQL Server data engineering, dimensional modeling, and business intelligence concepts in a healthcare context.
 
-The project does not claim to be a production-certified healthcare platform. Any real deployment
+It should not be interpreted as a production-certified healthcare information system. A production implementation would require appropriate security, privacy controls, access management, governance, testing, and operational monitoring.
+
+Do not publish real patient identifiers, medical records, credentials, or confidential datasets in a public repository. Use synthetic or appropriately de-identified data for public demonstrations.
+
+## 13. Author
+
+**Vivaan Bagga**
+
+GitHub: [@Vivaan2409](https://github.com/Vivaan2409)
+
+Repository: [end_to_end_de](https://github.com/Vivaan2409/end_to_end_de)
+
+---
+
+*An end-to-end portfolio project exploring the intersection of data engineering, dimensional modeling, healthcare analytics, and business intelligence.*
